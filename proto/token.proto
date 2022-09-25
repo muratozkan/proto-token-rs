@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package auth.token;
+
+import "google/protobuf/timestamp.proto";
+
+message Payload {
+    Identity identity = 1;
+    Session session = 2;
+    google.protobuf.Timestamp expires = 3;
+    Signature signature = 4;
+}
+
+message Identity {
+    int64 user_id = 2;
+    int64 workspace_id = 3;
+}
+
+message Session {
+    int64 id = 1;
+    google.protobuf.Timestamp expires = 2;
+} 
+
+enum Issuer {
+    DEFAULT = 0;
+}
+
+message Signature {
+    Issuer issuer = 1;
+    int32 key_id = 2;
+    int32 version = 3;
+}
