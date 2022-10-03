@@ -10,7 +10,9 @@ prost = "0.11.0"
 prost-types = "0.11.1"
 chrono = "0.4.22"
 base64 = "0.13.0"
-ed25519-dalek = "1.0.1"
+base64-url = "1.4.13"
+openssl = "0.10.42"
+hex = "0.4.3"
 
 [build-dependencies]
 prost-build = { version = "0.11.0"}
