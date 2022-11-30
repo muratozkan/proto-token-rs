@@ -1,79 +1,74 @@
 use chrono::{DateTime, Timelike, Utc};
 
 pub use self::crypto::KeyPair;
-use self::{serialize::serialize_token, crypto::do_sign};
 
 mod crypto;
 mod serialize;
 
 #[derive(Debug)]
-pub struct AuthToken {
+pub struct TokenClaims {
     pub user_id: u64,
     pub org_id: u64,
-    pub session_id: Option<u64>,
-    pub session_expires: Option<DateTime<Utc>>,
-    pub metadata: TokenInfo,
+    pub session_id: u64
 }
 
 #[derive(Debug)]
-pub struct TokenInfo {
+pub struct RawToken {
+    pub claims: TokenClaims,
+    pub expires: DateTime<Utc>,
+    pub issuer_id: i32
+}
+
+#[derive(Debug)]
+pub(crate) struct ToSignToken {
+    pub claims: TokenClaims,
     pub version: u32,
     pub expires: DateTime<Utc>,
     pub issuer_id: u32,
-    pub key_id: Option<i32>,
+    pub key_id: i32
 }
 
 #[derive(Debug)]
 pub struct SignedToken {
-    version: u32,
-    pub token: AuthToken,
-    pub signature: String,
+    pub claims: TokenClaims,
+    pub version: u32,
+    pub expires: DateTime<Utc>,
+    pub issuer_id: u32,
+    pub token: String
 }
 
-impl AuthToken {
-    pub fn from(user_id: u64, org_id: u64, expires: DateTime<Utc>) -> Self {
-        let expires_at = expires.with_nanosecond(0).unwrap();
-        Self {
-            user_id,
-            org_id,
-            session_id: None,
-            session_expires: None,
-            metadata: TokenInfo::from(expires_at),
-        }
-    }
+fn to_encoded_token(version: u32, bytes: Vec<u8>, sign_bytes: Vec<u8>) -> String {
+        version.to_string().to_owned() +
+        "." +
+        &base64_url::encode(&bytes) + 
+        "." +
+        &base64_url::encode(&sign_bytes)
+}
 
-    pub fn with_session(self, session_id: u64, session_expires: DateTime<Utc>) -> Self {
-        Self {
-            session_id: Some(session_id),
-            session_expires: session_expires.with_nanosecond(0),
-            ..self
-        }
-    }
+pub trait TokenSigner {
+    fn sign(&self, raw_token: RawToken, key_pair: &KeyPair) -> SignedToken;
+}
 
-    pub fn sign(mut self, key_pair: &KeyPair) -> SignedToken {
-        self.metadata.key_id = Some(key_pair.id);
-        let bytes = serialize_token(&self);
-        let sign_bytes = do_sign(&bytes, key_pair);
-        let signed = format!("{}.{}.{}", self.metadata.version, base64_url::encode(&bytes), base64_url::encode(&sign_bytes));
+pub struct TokenV1Signer{}
+
+impl TokenSigner for TokenV1Signer {
+    fn sign(&self, raw_token: RawToken, key_pair: &KeyPair) -> SignedToken {
+        let to_sign = ToSignToken {
+            claims: raw_token.claims,
+            version: 1,
+            expires: raw_token.expires.with_nanosecond(0).unwrap(),
+            issuer_id: 0,
+            key_id: key_pair.id
+        };
+        let bytes = serialize::serialize_token(&to_sign);
+        let sign_bytes = crypto::do_sign(&bytes, key_pair);
+        let token = to_encoded_token(1, bytes, sign_bytes);
         SignedToken {
-            version: self.metadata.version,
-            token: self,
-            signature: signed,
-        }
-    }
-}
-
-impl TokenInfo {
-    const V1: u32 = 1;
-
-    const ISSUER_SELF: u32 = 0;
-
-    pub fn from(expires: DateTime<Utc>) -> Self {
-        Self {
-            version: TokenInfo::V1,
-            issuer_id: TokenInfo::ISSUER_SELF,
-            key_id: None,
-            expires,
+            token, 
+            claims: to_sign.claims,
+            version: to_sign.version,
+            expires: to_sign.expires,
+            issuer_id: to_sign.issuer_id
         }
     }
 }

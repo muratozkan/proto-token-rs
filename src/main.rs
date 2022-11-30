@@ -1,9 +1,9 @@
-use auth::KeyPair;
 use chrono::{TimeZone, Utc};
 
-use crate::auth::AuthToken;
-
 mod auth;
+use crate::auth::{TokenClaims, TokenSigner};
+
+use self::auth::{RawToken, KeyPair, TokenV1Signer};
 
 fn main() {
     // let now = Utc::now();
@@ -12,14 +12,19 @@ fn main() {
 
     // let store_bytes = include_bytes!("../keypair.p12");
 
-    let expires = Utc.timestamp(1664137640, 0);
-    let session_expires = Utc.timestamp(1664148000, 0);
-    let mut token = AuthToken::from(1234, 23, expires).with_session(12, session_expires);
-
     // let key_id = 2089961141;
-    let key_pair = KeyPair::from_file("../keypair.p12");
+    let key_pair = KeyPair::from_file("keypair.p12");
+    let token = RawToken {
+        claims: TokenClaims {
+            user_id: 12345,
+            org_id: 23,
+            session_id: 3423425,
+        },
+        expires: Utc.timestamp(1664137640, 0),
+        issuer_id: 0
+    };
+    let signer = TokenV1Signer { };
+    let signed = signer.sign(token, &key_pair);
 
-    let signed = token.sign(&key_pair);
-
-    // println!("Signed: {}", signed);
+    println!("Signed: {}", signed.token);
 }
