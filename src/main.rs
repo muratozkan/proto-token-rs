@@ -1,8 +1,8 @@
 use chrono::{TimeZone, Utc};
 
 mod auth;
-use crate::auth::{TokenClaims, TokenSigner};
 
+use self::auth::{TokenClaims, TokenSigner};
 use self::auth::{RawToken, KeyPair, TokenV1Signer};
 
 fn main() {
@@ -16,11 +16,11 @@ fn main() {
     let key_pair = KeyPair::from_file("keypair.p12");
     let token = RawToken {
         claims: TokenClaims {
-            user_id: 12345,
-            org_id: 23,
-            session_id: 3423425,
+            user_id: 1,
+            org_id: 0,
+            session_id: 2,
         },
-        expires: Utc.timestamp(1664137640, 0),
+        expires: Utc.timestamp(1670803200, 0),
         issuer_id: 0
     };
     let signer = TokenV1Signer { };

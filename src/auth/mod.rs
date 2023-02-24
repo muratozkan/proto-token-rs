@@ -1,9 +1,10 @@
+pub mod crypto;
+pub mod serialize;
+
 use chrono::{DateTime, Timelike, Utc};
 
 pub use self::crypto::KeyPair;
-
-mod crypto;
-mod serialize;
+pub use self::crypto::do_sign;
 
 #[derive(Debug)]
 pub struct TokenClaims {
@@ -61,7 +62,7 @@ impl TokenSigner for TokenV1Signer {
             key_id: key_pair.id
         };
         let bytes = serialize::serialize_token(&to_sign);
-        let sign_bytes = crypto::do_sign(&bytes, key_pair);
+        let sign_bytes = do_sign(&bytes, key_pair);
         let token = to_encoded_token(1, bytes, sign_bytes);
         SignedToken {
             token, 

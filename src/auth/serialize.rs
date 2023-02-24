@@ -1,14 +1,14 @@
 use std::time::SystemTime;
 
 use prost::Message;
-use token::Signature as TokenSignature;
+use token::SignatureInfo;
 use token::{Identity, Payload, Session};
 use prost_types::Timestamp;
 
 use super::ToSignToken;
 
 mod token {
-    include!(concat!(env!("OUT_DIR"), "/auth.token.rs"));
+    include!(concat!(env!("OUT_DIR"), "/auth.token.v1.rs"));
 }
 
 impl From<&ToSignToken> for Payload {
@@ -27,14 +27,14 @@ impl From<&ToSignToken> for Payload {
         };
         payload.expires = Some(Timestamp::from(SystemTime::from(token.expires)));
         payload.signature = {
-            let mut sign = TokenSignature::default();
+            let mut sign = SignatureInfo::default();
             sign.issuer = token.issuer_id as i32;
             sign.key_id = token.key_id as i32;
             sign.version = token.version as i32;
 
             Some(sign)
         };
-
+        println!("{:?}", payload);
         payload
     }
 }
