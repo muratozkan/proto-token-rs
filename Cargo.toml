@@ -6,20 +6,21 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-prost = "0.11.7"
-prost-types = "0.11.7"
+prost = "0.11.9"
+prost-types = "0.11.9"
 chrono = "0.4.22"
 base64 = "0.21.0"
-base64-url = "1.4.13"
-openssl = { version = "0.10.43", optional = true }
+base64-url = "2.0.0"
 hex = "0.4.3"
-p12 = { version = "0.6.3", optional = true }
-ed25519 = { version="2.1.0", optional = true }
-ed25519-dalek = {version="1.0.1", optional = true }
+openssl = { version = "0.10.43", optional = true }
+jwt-compact = { version = "0.7.0", features = ["ed25519-compact"], optional = true }
+serde_json = { version="1.0.96", default-features = false, features = ["alloc"], optional = true}
+serde = { version = "1.0.160", default-features = false, features = ["derive"] , optional = true}
 
 [build-dependencies]
-prost-build = { version = "0.11.7"}
+protoc-bin-vendored = "3.0.0"
+prost-build = "0.11.9"
 
 [features]
-crypto_openssl = ["openssl"]
-crypto_rustcrypto = ["p12", "ed25519", "ed25519-dalek"]
+openssl = ["dep:openssl"]
+wasm = ["jwt-compact", "serde", "serde_json"]

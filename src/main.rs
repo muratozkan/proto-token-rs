@@ -13,14 +13,14 @@ fn main() {
     // let store_bytes = include_bytes!("../keypair.p12");
 
     // let key_id = 2089961141;
-    let key_pair = KeyPair::from_file("keypair.p12");
+    let key_pair = KeyPair::from_jwk("keypair.json");
     let token = RawToken {
         claims: TokenClaims {
             user_id: 1,
             org_id: 0,
             session_id: 2,
         },
-        expires: Utc.timestamp(1670803200, 0),
+        expires: Utc.timestamp_opt(1670803200, 0).unwrap(),
         issuer_id: 0
     };
     let signer = TokenV1Signer { };
